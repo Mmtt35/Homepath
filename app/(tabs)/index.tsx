@@ -1,8 +1,6 @@
 import { db } from "../firebase";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
-import { db } from "../firebase";
 import { collection, addDoc } from "firebase/firestore";
-
 export default function HomeScreen() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
