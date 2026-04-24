@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Alert,
   ScrollView,
+  Image, // ✅ ADD THIS
 } from "react-native";
 
 import { db } from "../../firebase";
@@ -48,6 +49,11 @@ export default function HomeScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.inner}>
+
+        <Image
+  source={require("../../assets/images/logo.png")}
+  style={styles.logo}
+/>
 
         {/* Title */}
         <Text style={styles.title}>🏡 HomePath</Text>
@@ -110,6 +116,16 @@ const styles = StyleSheet.create({
     color: "#555",
     marginBottom: 30,
   },
+
+  // ✅ proper logo style (NOT commented, NOT nested)
+  logo: {
+    width: 180,
+    height: 180,
+    alignSelf: "center",
+    marginBottom: 10,
+    resizeMode: "contain",
+  },
+
   input: {
     borderWidth: 1,
     borderColor: "#ccc",
