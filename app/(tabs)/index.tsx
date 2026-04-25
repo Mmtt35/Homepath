@@ -18,13 +18,16 @@ export default function HomeScreen() {
   const [listings, setListings] = useState([]);
   const [selectedHome, setSelectedHome] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [budget, setBudget] = useState("");
 
-  useEffect(() => {
+useEffect(() => {
   const fetchHomes = async () => {
+    setLoading(true);
+
     try {
       const res = await fetch(
         "https://api.realtyapi.io/v1/properties?location=Mandeville,LA",
@@ -36,66 +39,60 @@ export default function HomeScreen() {
       );
 
       const data = await res.json();
+      console.log("API DATA:", data);
 
-      console.log("API DATA:", data); // 👈 VERY IMPORTANT
-      
-let homesArray = [];
+      // 🔥 Handle both single + array responses
+      let homesArray = [];
 
-// 🔥 Handle SINGLE property response
-if (data.propertyDetails) {
-  homesArray = [data.propertyDetails];
-} else {
-  // 🔥 Handle list responses
-  homesArray =
-    data.results ||
-    data.properties ||
-    data.listings ||
-    data.data ||
-    [];
-}
+      if (data.propertyDetails) {
+        homesArray = [data.propertyDetails];
+      } else {
+        homesArray =
+          data.results ||
+          data.properties ||
+          data.listings ||
+          data.data ||
+          [];
+      }
 
-// ✅ Ensure it's an array
-const safeArray = Array.isArray(homesArray) ? homesArray : [];
+      const safeArray = Array.isArray(homesArray) ? homesArray : [];
 
-// ✅ Format for UI
-const formatted = safeArray.map((home, index) => ({
-  id: index,
+      const formatted = safeArray.map((home, index) => ({
+        id: index,
 
-  price:
-    home.price ||
-    home.listPrice ||
-    home.zestimate ||
-    home.affordabilityEstimate?.totalMonthlyCost * 300 ||
-    250000,
+        price:
+          home.price ||
+          home.listPrice ||
+          home.zestimate ||
+          (home.affordabilityEstimate?.totalMonthlyCost
+            ? home.affordabilityEstimate.totalMonthlyCost * 300
+            : 250000),
 
-  beds:
-    home.bedrooms ||
-    home.beds ||
-    3,
+        beds: home.bedrooms || home.beds || 3,
+        baths: home.bathrooms || home.baths || 2,
 
-  baths:
-    home.bathrooms ||
-    home.baths ||
-    2,
+        address:
+          home.address ||
+          home.streetAddress ||
+          (home.city && home.state
+            ? `${home.city}, ${home.state}`
+            : "Property Location"),
 
-  address:
-    home.address ||
-    home.streetAddress ||
-    (home.city && home.state
-      ? `${home.city}, ${home.state}`
-      : "Property Location"),
+        image:
+          home.imgSrc ||
+          home.photo ||
+          home.thumbnail ||
+          `https://source.unsplash.com/400x250/?house,${index}`,
+      }));
 
-  image:
-    home.imgSrc ||
-    home.photo ||
-    home.thumbnail ||
-    `https://source.unsplash.com/400x250/?modern-house,${index}`,
-}));
+      console.log("FORMATTED:", formatted);
 
-     setListings(formatted);
+      setListings(formatted);
 
     } catch (err) {
       console.log("API ERROR:", err);
+    } finally {
+      setLoading(false); // ✅ VERY IMPORTANT
     }
   };
 
@@ -243,7 +240,16 @@ const formatted = safeArray.map((home, index) => ({
           Discover Homes
         </Text>
 
-        {listings.map(home => (
+        {loading ? (
+  <Text style={{ color: "white", marginTop: 20 }}>
+    Loading homes...
+  </Text>
+) : listings.length === 0 ? (
+  <Text style={{ color: "#94a3b8", marginTop: 20 }}>
+    No homes found (API issue)
+  </Text>
+) : (
+  listings.map(home => (
           <TouchableOpacity
             key={home.id}
             onPress={() => setSelectedHome(home)}
