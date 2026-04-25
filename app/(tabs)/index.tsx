@@ -38,35 +38,61 @@ export default function HomeScreen() {
       const data = await res.json();
 
       console.log("API DATA:", data); // 👈 VERY IMPORTANT
-// 👇 Get data safely from API
-const homesArray =
-  data.results ||
-  data.listings ||
-  data.data ||
-  data ||
-  [];
+      
+let homesArray = [];
 
-// 👇 Make sure it's an array
+// 🔥 Handle SINGLE property response
+if (data.propertyDetails) {
+  homesArray = [data.propertyDetails];
+} else {
+  // 🔥 Handle list responses
+  homesArray =
+    data.results ||
+    data.properties ||
+    data.listings ||
+    data.data ||
+    [];
+}
+
+// ✅ Ensure it's an array
 const safeArray = Array.isArray(homesArray) ? homesArray : [];
 
-// 👇 Format it for your UI
+// ✅ Format for UI
 const formatted = safeArray.map((home, index) => ({
   id: index,
-  price: home.price || home.listPrice || 250000,
-  beds: home.bedrooms || home.beds || 3,
-  baths: home.bathrooms || home.baths || 2,
+
+  price:
+    home.price ||
+    home.listPrice ||
+    home.zestimate ||
+    home.affordabilityEstimate?.totalMonthlyCost * 300 ||
+    250000,
+
+  beds:
+    home.bedrooms ||
+    home.beds ||
+    3,
+
+  baths:
+    home.bathrooms ||
+    home.baths ||
+    2,
+
   address:
     home.address ||
-    home.fullAddress ||
-    `${home.city || ""}, ${home.state || ""}`,
+    home.streetAddress ||
+    (home.city && home.state
+      ? `${home.city}, ${home.state}`
+      : "Property Location"),
+
   image:
+    home.imgSrc ||
     home.photo ||
     home.thumbnail ||
-    home.image ||
-    `https://source.unsplash.com/400x250/?luxury,home,${index}`,
+    `https://source.unsplash.com/400x250/?modern-house,${index}`,
 }));
-    
-    setListings(formatted);
+
+     setListings(formatted);
 
     } catch (err) {
       console.log("API ERROR:", err);
