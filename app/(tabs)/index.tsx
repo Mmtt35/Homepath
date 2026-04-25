@@ -239,7 +239,6 @@ useEffect(() => {
         <Text style={{ color: "white", fontSize: 28, fontWeight: "bold" }}>
           Discover Homes
         </Text>
-
         {loading ? (
   <Text style={{ color: "white", marginTop: 20 }}>
     Loading homes...
@@ -277,6 +276,7 @@ useEffect(() => {
             </View>
           </TouchableOpacity>
         ))}
+
       </ScrollView>
     </SafeAreaView>
   );
