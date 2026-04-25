@@ -229,8 +229,6 @@ useEffect(() => {
 
         </ScrollView>
       </SafeAreaView>
-    );
-  }
 
   // 🏠 LISTINGS
   return (
@@ -275,12 +273,12 @@ useEffect(() => {
               </Text>
             </View>
           </TouchableOpacity>
-        ))}
+        );
+        }) 
+      )} 
 
       </ScrollView>
     </SafeAreaView>
-  );
-}
 
 const styles = StyleSheet.create({
   container: {
