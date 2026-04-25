@@ -23,20 +23,59 @@ export default function HomeScreen() {
   const [phone, setPhone] = useState("");
   const [budget, setBudget] = useState("");
 
-  // 🔥 Mock data
   useEffect(() => {
-    setListings([
-      {
-        id: 1,
-        price: 200000,
-        beds: 3,
-        baths: 2,
-        address: "123 Main St, Mandeville",
-        image: "https://via.placeholder.com/400x250",
-      },
-    ]);
-  }, []);
+  const fetchHomes = async () => {
+    try {
+      const res = await fetch(
+        "https://api.realtyapi.io/v1/properties?location=Mandeville,LA",
+        {
+          headers: {
+            "x-api-key": "rt_4qSHaG4OQ4zPDWXKJ9PKEgVE",
+          },
+        }
+      );
 
+      const data = await res.json();
+
+      console.log("API DATA:", data); // 👈 VERY IMPORTANT
+// 👇 Get data safely from API
+const homesArray =
+  data.results ||
+  data.listings ||
+  data.data ||
+  data ||
+  [];
+
+// 👇 Make sure it's an array
+const safeArray = Array.isArray(homesArray) ? homesArray : [];
+
+// 👇 Format it for your UI
+const formatted = safeArray.map((home, index) => ({
+  id: index,
+  price: home.price || home.listPrice || 250000,
+  beds: home.bedrooms || home.beds || 3,
+  baths: home.bathrooms || home.baths || 2,
+  address:
+    home.address ||
+    home.fullAddress ||
+    `${home.city || ""}, ${home.state || ""}`,
+  image:
+    home.photo ||
+    home.thumbnail ||
+    home.image ||
+    `https://source.unsplash.com/400x250/?luxury,home,${index}`,
+}));
+    
+    setListings(formatted);
+
+    } catch (err) {
+      console.log("API ERROR:", err);
+    }
+  };
+
+  fetchHomes();
+}, []);
+  
   const handleSubmit = async () => {
     if (!name || !phone || !budget) {
       Alert.alert("Missing Info", "Please fill out all fields");
