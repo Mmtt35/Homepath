@@ -55,10 +55,6 @@ export default function HomeScreen() {
   style={styles.logo}
 />
 
-        {/* Title */}
-        <Text style={styles.title}>🏡 HomePath</Text>
-        <Text style={styles.subtitle}>Find Your Dream Home</Text>
-
         {/* Inputs */}
         <TextInput
           placeholder="Enter Name"
