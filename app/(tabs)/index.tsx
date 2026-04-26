@@ -16,7 +16,7 @@ import { collection, addDoc } from "firebase/firestore";
 
 export default function HomeScreen() {
   const [listings, setListings] = useState([]);
-  const [selectedHome, setSelectedHome] = useState(null);
+  Const [selectedHome, setSelectedHome] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
 
