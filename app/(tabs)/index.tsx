@@ -31,7 +31,7 @@ export default function HomeScreen() {
 
       try {
         const res = await fetch(
-          "https://api.realtyapi.io/v1/properties?location=Mandeville,LA",
+          "https://api.realtyapi.io/v1/search?city=Mandeville&state=LA&limit=10",
           {
             headers: {
               "x-api-key": "rt_4qSHaG4OQ4zPDWXKJ9PKEgVE",
@@ -42,71 +42,52 @@ export default function HomeScreen() {
         const data = await res.json();
         console.log("API DATA:", data);
 
-        let homesArray = [];
+        const homesArray = data.results || data.data || [];
 
-        // Handle single property
-        if (data.propertyDetails) {
-          homesArray = [data.propertyDetails];
-        } else {
-          homesArray =
-            data.results ||
-            data.properties ||
-            data.listings ||
-            data.data ||
-            [];
-        }
-
-        const safeArray = Array.isArray(homesArray) ? homesArray : [];
-
-        const formatted = safeArray.map((home, index) => ({
+        const formatted = homesArray.map((home, index) => ({
           id: index,
 
           price:
             home.price ||
             home.listPrice ||
             home.zestimate ||
-            (home.affordabilityEstimate?.totalMonthlyCost
-              ? home.affordabilityEstimate.totalMonthlyCost * 300
-              : 250000),
+            250000,
 
-          beds: home.bedrooms || home.beds || 3,
-          baths: home.bathrooms || home.baths || 2,
+          beds: home.beds || home.bedrooms || 3,
+          baths: home.baths || home.bathrooms || 2,
 
           address:
+            home.address?.line ||
             home.address ||
-            home.streetAddress ||
-            (home.city && home.state
-              ? `${home.city}, ${home.state}`
-              : "Mandeville, LA"),
+            `${home.city || ""}, ${home.state || ""}`,
 
           image:
+            home.photos?.[0] ||
             home.imgSrc ||
-            home.photo ||
-            home.thumbnail ||
             `https://source.unsplash.com/400x250/?house,${index}`,
         }));
 
         console.log("FORMATTED:", formatted);
 
-        // Fallback so UI never empty
+        // ✅ fallback if API fails
         if (formatted.length === 0) {
-          setListings([
-            {
-              id: 1,
-              price: 325000,
-              beds: 3,
-              baths: 2,
-              address: "Mandeville, LA",
-              image: "https://source.unsplash.com/400x250/?house",
-            },
-          ]);
+          const fakeList = Array.from({ length: 6 }, (_, i) => ({
+            id: i,
+            price: 250000 + i * 20000,
+            beds: 3,
+            baths: 2,
+            address: "Mandeville, LA",
+            image: `https://source.unsplash.com/400x250/?house,${i}`,
+          }));
+
+          setListings(fakeList);
         } else {
           setListings(formatted);
         }
       } catch (err) {
         console.log("API ERROR:", err);
 
-        // fallback on error
+        // fallback on crash
         setListings([
           {
             id: 1,
@@ -125,7 +106,7 @@ export default function HomeScreen() {
     fetchHomes();
   }, []);
 
-  // 🔥 SUBMIT LEAD
+  // 🔥 SUBMIT FORM
   const handleSubmit = async () => {
     if (!name || !phone || !budget) {
       Alert.alert("Missing Info", "Please fill out all fields");
@@ -152,7 +133,7 @@ export default function HomeScreen() {
     }
   };
 
-  // 📝 FORM
+  // 📝 FORM SCREEN
   if (showForm) {
     return (
       <SafeAreaView style={styles.container}>
@@ -198,7 +179,7 @@ export default function HomeScreen() {
     );
   }
 
-  // 🏡 DETAILS
+  // 🏡 DETAIL SCREEN
   if (selectedHome) {
     const monthly = Math.round(
       (selectedHome.price * 0.95 * 0.065) / 12 /
@@ -266,12 +247,16 @@ export default function HomeScreen() {
     );
   }
 
-  // 🏠 LISTINGS
+  // 🏠 LIST SCREEN
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#0f172a" }}>
       <ScrollView contentContainerStyle={{ padding: 20 }}>
         <Text style={{ color: "white", fontSize: 28, fontWeight: "bold" }}>
           Discover Homes
+        </Text>
+
+        <Text style={{ color: "#94a3b8", marginTop: 5 }}>
+          {listings.length} homes available
         </Text>
 
         {loading ? (
@@ -286,7 +271,10 @@ export default function HomeScreen() {
           listings.map((home) => (
             <TouchableOpacity
               key={home.id}
-              onPress={() => setSelectedHome(home)}
+              onPress={() => {
+                console.log("Selected:", home);
+                setSelectedHome(home);
+              }}
               style={{
                 backgroundColor: "#1e293b",
                 borderRadius: 20,
@@ -326,6 +314,7 @@ export default function HomeScreen() {
   );
 }
 
+// 🎨 STYLES
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
