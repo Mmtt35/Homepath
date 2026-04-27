@@ -1,362 +1,130 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ScrollView,
-  Image,
-  SafeAreaView,
-} from "react-native";
-
-import { db } from "../../firebase";
-import { collection, addDoc } from "firebase/firestore";
+import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet } from "react-native";
+import { useEffect, useState } from "react";
 
 export default function HomeScreen() {
-  const [listings, setListings] = useState([]);
-  const [selectedHome, setSelectedHome] = useState(null);
-  const [showForm, setShowForm] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [listings, setListings] = useState<any[]>([]);
 
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [budget, setBudget] = useState("");
+    useEffect(() => {
+        fetchListings();
+          }, []);
 
-  // 🔥 FETCH HOMES
-  useEffect(() => {
-    const fetchHomes = async () => {
-      setLoading(true);
+            const fetchListings = async () => {
+                try {
+                      const res = await fetch(
+                              "https://api.realtyapi.io/v1/properties?city=Mandeville&state=LA&limit=20",
+                                      {
+                                                headers: {
+                                                            "x-api-key": "rt_4qSHaG4OQ4zPDWXKJ9PKEgVE",
+                                                                      },
+                                                                              }
+                                                                                    );
 
-      try
-        const res = await fetch(
-            "https://api.realtyapi.io/v1/properties?city=Mandeville&state=LA&limit=20",
-              {
-                  headers: {
-                        "x-api-key": "rt_4qSHaG4OQ4zPDWXKJ9PKEgVE",
-                            }
-                              }
-                              );
-        
+                                                                                          const data = await res.json();
 
-        const data = await res.json();
-        console.log("API DATA:", data);
-        console.log("RESULT KEYS:", Object.keys(data));
+                                                                                                const formatted =
+                                                                                                        data?.results?.map((item: any, i: number) => ({
+                                                                                                                  id: i.toString(),
+                                                                                                                            price: item?.list_price || 300000,
+                                                                                                                                      beds: item?.beds || 3,
+                                                                                                                                                baths: item?.baths || 2,
+                                                                                                                                                          address: item?.location?.city || "Mandeville, LA",
+                                                                                                                                                                    image: `https://source.unsplash.com/400x250/?house,${i}`,
+                                                                                                                                                                            })) || [];
 
-        const homesArray = data.results || data.data || [];
+                                                                                                                                                                                  // ✅ Fallback if API empty
+                                                                                                                                                                                        if (formatted.length === 0) {
+                                                                                                                                                                                                const fakeList = Array.from({ length: 6 }).map((_, i) => ({
+                                                                                                                                                                                                          id: i.toString(),
+                                                                                                                                                                                                                    price: 250000 + i * 15000,
+                                                                                                                                                                                                                              beds: 3,
+                                                                                                                                                                                                                                        baths: 2,
+                                                                                                                                                                                                                                                  address: "Mandeville, LA",
+                                                                                                                                                                                                                                                            image: `https://source.unsplash.com/400x250/?house,${i}`,
+                                                                                                                                                                                                                                                                    }));
 
-        const formatted = homesArray.map((home, index) => ({
-          id: index,
+                                                                                                                                                                                                                                                                            setListings(fakeList);
+                                                                                                                                                                                                                                                                                  } else {
+                                                                                                                                                                                                                                                                                          setListings(formatted);
+                                                                                                                                                                                                                                                                                                }
 
-          price:
-            home.price ||
-            home.listPrice ||
-            home.zestimate ||
-            250000,
+                                                                                                                                                                                                                                                                                                    } catch (error) {
+                                                                                                                                                                                                                                                                                                          console.log("Error fetching listings:", error);
 
-          beds: home.beds || home.bedrooms || 3,
-          baths: home.baths || home.bathrooms || 2,
+                                                                                                                                                                                                                                                                                                                // fallback on error too
+                                                                                                                                                                                                                                                                                                                      const fakeList = Array.from({ length: 6 }).map((_, i) => ({
+                                                                                                                                                                                                                                                                                                                              id: i.toString(),
+                                                                                                                                                                                                                                                                                                                                      price: 250000 + i * 15000,
+                                                                                                                                                                                                                                                                                                                                              beds: 3,
+                                                                                                                                                                                                                                                                                                                                                      baths: 2,
+                                                                                                                                                                                                                                                                                                                                                              address: "Mandeville, LA",
+                                                                                                                                                                                                                                                                                                                                                                      image: `https://source.unsplash.com/400x250/?house,${i}`,
+                                                                                                                                                                                                                                                                                                                                                                            }));
 
-          address:
-            home.address?.line ||
-            home.address ||
-            `${home.city || ""}, ${home.state || ""}`,
+                                                                                                                                                                                                                                                                                                                                                                                  setListings(fakeList);
+                                                                                                                                                                                                                                                                                                                                                                                      }
+                                                                                                                                                                                                                                                                                                                                                                                        };
 
-          image:
-            home.photos?.[0] ||
-            home.imgSrc ||
-            `https://source.unsplash.com/400x250/?house,${index}`,
-        }));
+                                                                                                                                                                                                                                                                                                                                                                                          const renderItem = ({ item }: any) => (
+                                                                                                                                                                                                                                                                                                                                                                                              <TouchableOpacity style={styles.card}>
+                                                                                                                                                                                                                                                                                                                                                                                                    <Image source={{ uri: item.image }} style={styles.image} />
+                                                                                                                                                                                                                                                                                                                                                                                                          <View style={styles.info}>
+                                                                                                                                                                                                                                                                                                                                                                                                                  <Text style={styles.price}>${item.price.toLocaleString()}</Text>
+                                                                                                                                                                                                                                                                                                                                                                                                                          <Text style={styles.address}>{item.address}</Text>
+                                                                                                                                                                                                                                                                                                                                                                                                                                  <Text style={styles.details}>
+                                                                                                                                                                                                                                                                                                                                                                                                                                            {item.beds} beds • {item.baths} baths
+                                                                                                                                                                                                                                                                                                                                                                                                                                                    </Text>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                          </View>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                              </TouchableOpacity>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                );
 
-        console.log("FORMATTED:", formatted);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                  return (
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <View style={styles.container}>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                            <Text style={styles.title}>Discover Homes</Text>
 
-        // ✅ fallback if API fails
-          if (formatted.length > 0) {
-              setListings(formatted);
-              } else {
-                // 👇 TEMP: generate multiple mock homes so UI works
-                  const mock = Array.from({ length: 6 }).map((_, i) => ({
-                      id: i,
-                          price: 250000 + i * 15000,
-                              beds: 3,
-                                  baths: 2,
-                                      address: "Mandeville, LA",
-                                          image: `https://source.unsplash.com/400x250/?house,${i}`,
-                                            }));
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <FlatList
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          data={listings}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  keyExtractor={(item) => item.id}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          renderItem={renderItem}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                />
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    </View>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      );
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      }
 
-                                              setListings(mock);
-                                              }
-          }
-
-          setListings(fakeList);
-        } else {
-          setListings(formatted);
-        }
-      } catch (err) {
-        console.log("API ERROR:", err);
-
-        // fallback on crash
-        setListings([
-          {
-            id: 1,
-            price: 300000,
-            beds: 3,
-            baths: 2,
-            address: "Mandeville, LA",
-            image: "https://source.unsplash.com/400x250/?house",
-          },
-        ]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchHomes();
-  }, []);
-
-  // 🔥 SUBMIT FORM
-  const handleSubmit = async () => {
-    if (!name || !phone || !budget) {
-      Alert.alert("Missing Info", "Please fill out all fields");
-      return;
-    }
-
-    try {
-      await addDoc(collection(db, "leads"), {
-        name,
-        phone,
-        budget,
-        createdAt: new Date(),
-      });
-
-      Alert.alert("Success", "You're pre-approved 🎉");
-
-      setName("");
-      setPhone("");
-      setBudget("");
-      setShowForm(false);
-    } catch (error) {
-      console.log(error);
-      Alert.alert("Error", "Something went wrong");
-    }
-  };
-
-  // 📝 FORM SCREEN
-  if (showForm) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <ScrollView contentContainerStyle={styles.inner}>
-          <Image
-            source={require("../../assets/images/logo.png")}
-            style={styles.logo}
-          />
-
-          <TextInput
-            placeholder="Enter Name"
-            placeholderTextColor="#94a3b8"
-            value={name}
-            onChangeText={setName}
-            style={styles.input}
-          />
-
-          <TextInput
-            placeholder="Enter Phone"
-            placeholderTextColor="#94a3b8"
-            value={phone}
-            onChangeText={setPhone}
-            style={styles.input}
-          />
-
-          <TextInput
-            placeholder="Enter Budget"
-            placeholderTextColor="#94a3b8"
-            value={budget}
-            onChangeText={setBudget}
-            style={styles.input}
-          />
-
-          <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-            <Text style={styles.buttonText}>Submit</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => setShowForm(false)}>
-            <Text style={{ color: "#94a3b8", marginTop: 20 }}>← Back</Text>
-          </TouchableOpacity>
-        </ScrollView>
-      </SafeAreaView>
-    );
-  }
-
-  // 🏡 DETAIL SCREEN
-  if (selectedHome) {
-    const monthly = Math.round(
-      (selectedHome.price * 0.95 * 0.065) / 12 /
-        (1 - Math.pow(1 + 0.065 / 12, -360)) +
-        (selectedHome.price * 0.012) / 12 +
-        150
-    );
-
-    return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#0f172a" }}>
-        <ScrollView>
-          <Image
-            source={{ uri: selectedHome.image }}
-            style={{ width: "100%", height: 250 }}
-          />
-
-          <View style={{ padding: 20 }}>
-            <Text style={{ color: "white", fontSize: 24, fontWeight: "bold" }}>
-              ${selectedHome.price.toLocaleString()}
-            </Text>
-
-            <Text style={{ color: "#94a3b8", marginTop: 5 }}>
-              {selectedHome.address}
-            </Text>
-
-            <Text style={{ color: "#cbd5f5", marginTop: 10 }}>
-              {selectedHome.beds} beds • {selectedHome.baths} baths
-            </Text>
-
-            <View
-              style={{
-                backgroundColor: "#1e40af",
-                padding: 20,
-                borderRadius: 20,
-                marginTop: 25,
-              }}
-            >
-              <Text style={{ color: "#c7d2fe" }}>Estimated Monthly</Text>
-              <Text
-                style={{
-                  color: "white",
-                  fontSize: 24,
-                  fontWeight: "bold",
-                }}
-              >
-                ${monthly}/mo
-              </Text>
-            </View>
-
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => setShowForm(true)}
-            >
-              <Text style={styles.buttonText}>Get Pre-Approved</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={() => setSelectedHome(null)}>
-              <Text style={{ color: "#94a3b8", marginTop: 20 }}>
-                ← Back to listings
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    );
-  }
-
-  // 🏠 LIST SCREEN
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#0f172a" }}>
-      <ScrollView contentContainerStyle={{ padding: 20 }}>
-        <Text style={{ color: "white", fontSize: 28, fontWeight: "bold" }}>
-          Discover Homes
-        </Text>
-
-        <Text style={{ color: "#94a3b8", marginTop: 5 }}>
-          {listings.length} homes available
-        </Text>
-
-        {loading ? (
-          <Text style={{ color: "white", marginTop: 20 }}>
-            Loading homes...
-          </Text>
-        ) : listings.length === 0 ? (
-          <Text style={{ color: "#94a3b8", marginTop: 20 }}>
-            No homes found
-          </Text>
-        ) : (
-          listings.map((home) => (
-            <TouchableOpacity
-              key={home.id}
-              onPress={() => {
-                console.log("Selected:", home);
-                setSelectedHome(home);
-              }}
-              style={{
-                backgroundColor: "#1e293b",
-                borderRadius: 20,
-                marginTop: 20,
-                overflow: "hidden",
-              }}
-            >
-              <Image
-                source={{ uri: home.image }}
-                style={{ width: "100%", height: 180 }}
-              />
-
-              <View style={{ padding: 16 }}>
-                <Text
-                  style={{
-                    color: "white",
-                    fontSize: 18,
-                    fontWeight: "bold",
-                  }}
-                >
-                  ${home.price.toLocaleString()}
-                </Text>
-
-                <Text style={{ color: "#94a3b8" }}>
-                  {home.address}
-                </Text>
-
-                <Text style={{ color: "#cbd5f5" }}>
-                  {home.beds} beds • {home.baths} baths
-                </Text>
-              </View>
-            </TouchableOpacity>
-          ))
-        )}
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
-
-// 🎨 STYLES
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    justifyContent: "center",
-    padding: 20,
-    backgroundColor: "#0f172a",
-  },
-  inner: {
-    width: "100%",
-  },
-  logo: {
-    width: 200,
-    height: 200,
-    alignSelf: "center",
-    marginBottom: 20,
-    resizeMode: "contain",
-  },
-  input: {
-    backgroundColor: "#1e293b",
-    color: "white",
-    padding: 14,
-    borderRadius: 12,
-    marginBottom: 15,
-  },
-  button: {
-    backgroundColor: "#22c55e",
-    padding: 16,
-    borderRadius: 14,
-    alignItems: "center",
-    marginTop: 15,
-  },
-  buttonText: {
-    color: "white",
-    fontWeight: "bold",
-  },
-});
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      const styles = StyleSheet.create({
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        container: {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            flex: 1,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                backgroundColor: "#0f172a",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    padding: 16,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      },
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        title: {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            fontSize: 28,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                color: "white",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    fontWeight: "bold",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        marginBottom: 16,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          },
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            card: {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                backgroundColor: "#1e293b",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    borderRadius: 16,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        marginBottom: 16,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            overflow: "hidden",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              },
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                image: {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    width: "100%",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        height: 150,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          },
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            info: {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                padding: 12,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  },
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    price: {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        color: "white",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            fontSize: 20,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                fontWeight: "bold",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  },
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    address: {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        color: "#94a3b8",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          },
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            details: {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                color: "#cbd5f5",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    marginTop: 4,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      },
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      });
