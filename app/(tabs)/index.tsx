@@ -29,7 +29,7 @@ export default function HomeScreen() {
     const fetchHomes = async () => {
       setLoading(true);
 
-      try {
+      try
         const res = await fetch(
             "https://api.realtyapi.io/v1/properties?city=Mandeville&state=LA&limit=20",
               {
