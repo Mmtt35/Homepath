@@ -41,6 +41,7 @@ export default function HomeScreen() {
 
         const data = await res.json();
         console.log("API DATA:", data);
+        console.log("RESULT KEYS:", Object.keys(data));
 
         const homesArray = data.results || data.data || [];
 
