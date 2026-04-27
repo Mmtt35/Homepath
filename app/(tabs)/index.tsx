@@ -31,7 +31,7 @@ export default function HomeScreen() {
 
       try {
         const res = await fetch(
-          "https://api.realtyapi.io/v1/properties?location=Texas&limit=10", 
+          https://api.realtyapi.io/v1/properties?city=Mandeville&state=LA&limit=20, 
           {
             headers: {
               "x-api-key": "rt_4qSHaG4OQ4zPDWXKJ9PKEgVE",
@@ -71,15 +71,22 @@ export default function HomeScreen() {
         console.log("FORMATTED:", formatted);
 
         // ✅ fallback if API fails
-        if (formatted.length === 0) {
-          const fakeList = Array.from({ length: 6 }, (_, i) => ({
-            id: i,
-            price: 250000 + i * 20000,
-            beds: 3,
-            baths: 2,
-            address: "Mandeville, LA",
-            image: `https://source.unsplash.com/400x250/?house,${i}`,
-          }));
+          if (formatted.length > 0) {
+              setListings(formatted);
+              } else {
+                // 👇 TEMP: generate multiple mock homes so UI works
+                  const mock = Array.from({ length: 6 }).map((_, i) => ({
+                      id: i,
+                          price: 250000 + i * 15000,
+                              beds: 3,
+                                  baths: 2,
+                                      address: "Mandeville, LA",
+                                          image: `https://source.unsplash.com/400x250/?house,${i}`,
+                                            }));
+
+                                              setListings(mock);
+                                              }
+          }
 
           setListings(fakeList);
         } else {
