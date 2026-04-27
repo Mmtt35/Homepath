@@ -31,13 +31,14 @@ export default function HomeScreen() {
 
       try {
         const res = await fetch(
-          "https://api.realtyapi.io/v1/properties?city=Mandeville&state=LA&limit=20", 
-          {
-            headers: {
-              "x-api-key": "rt_4qSHaG4OQ4zPDWXKJ9PKEgVE",
-            },
-          }
-        );
+            "https://api.realtyapi.io/v1/properties?city=Mandeville&state=LA&limit=20",
+              {
+                  headers: {
+                        "x-api-key": "rt_4qSHaG4OQ4zPDWXKJ9PKEgVE",
+                            }
+                              }
+                              );
+        )
 
         const data = await res.json();
         console.log("API DATA:", data);
