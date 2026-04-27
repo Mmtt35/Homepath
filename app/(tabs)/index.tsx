@@ -38,7 +38,7 @@ export default function HomeScreen() {
                             }
                               }
                               );
-        )
+        
 
         const data = await res.json();
         console.log("API DATA:", data);
